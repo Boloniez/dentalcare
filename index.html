@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DentalCare - Запись к стоматологу</title>
+  <script src="https://cdn.tailwindcss.com "></script>
+  <style>
+    body {
+      background: linear-gradient(to right, #e0f7fa, #ffffff);
+      font-family: 'Segoe UI', sans-serif;
+      transition: all 0.3s ease-in-out;
+      overflow-x: hidden;
+    }
+
+    .page {
+      display: none;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeInUp 0.4s forwards;
+    }
+
+    .page.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0); }
+      50% { transform: translate(5px, -5px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    .btn-hover:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+
+    .profile-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 9999px;
+      background: #10b981;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .chat-message {
+      margin: 4px 0;
+      max-width: 80%;
+    }
+
+    .msg-you {
+      background-color: #bfdbfe;
+      text-align: right;
+    }
+
+    .msg-doctor {
+      background-color: #f3f4f6;
+      text-align: left;
+    }
+
+    .schedule-slot {
+      background-color: #dbeafe;
+      color: #1e40af;
+      border-radius: 4px;
+      padding: 4px 8px;
+      display: inline-block;
+      margin: 2px;
+    }
+
+    .doctor-card {
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 1rem;
+      background-color: #f9fafb;
+    }
+
+    .doctor-card h4 {
+      font-weight: bold;
+    }
+
+    .doctor-schedule {
+      margin-top: 0.5rem;
+    }
+
+    .admin-dashboard h3 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    .contact-section {
+      background-color: #f0fdf4;
+      border-top: 1px solid #d1fae5;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    .contact-section h2 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    .contact-section p {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .floating {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .mouse-trail {
+      position: fixed;
+      pointer-events: none;
+      z-index: 50;
+      width: 10px;
+      height: 10px;
+      background: #3b82f6;
+      border-radius: 9999px;
+      opacity: 0.2;
+      transform: scale(0);
+      transition: transform 0.2s ease-out;
+    }
+
+    .request-item {
+      background: #dbeafe;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .request-item strong {
+      color: #1e40af;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Mouse Trail Animation -->
+  <div id="trailContainer"></div>
+
+  <!-- App Container -->
+  <div id="app" class="w-full max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+    
+    <!-- Header with Clinic Name -->
+    <div class="bg-teal-500 text-white p-4 text-center">
+      <h1 class="text-2xl font-bold">🦷 DentalCare</h1>
+      <p class="text-sm">Клиника современной стоматологии</p>
+    </div>
+
+    <!-- Login/Register Page -->
+    <div id="authPage" class="page active">
+      <div class="flex flex-col md:flex-row">
+        <!-- Left Side with Image -->
+        <div class="md:w-1/2 bg-blue-50 p-8 flex items-center justify-center">
+          <img src="https://placehold.co/300x300/3b82f6/FFFFFF?text=Dental+Care&font=noto&font_size=80 " 
+               alt="Dental Care" 
+               class="w-48 h-48 floating" />
+        </div>
+
+        <!-- Right Side with Form -->
+        <div class="md:w-1/2 p-6 space-y-6">
+          <h2 class="text-3xl font-bold text-center text-blue-600">Вход и Регистрация</h2>
+          <div class="space-y-4">
+            <input id="username" type="text" placeholder="Логин" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+            <input id="password" type="password" placeholder="Пароль" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+            <select id="role" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+              <option value="">Выберите роль</option>
+              <option value="patient">Пациент</option>
+              <option value="doctor">Врач</option>
+              <option value="admin">Администратор</option>
+            </select>
+            <button onclick="login()" class="w-full py-2 bg-blue-500 hover:bg-blue-600 btn-hover text-white rounded-md transition duration-200">Войти</button>
+            <button onclick="showRegister()" class="w-full py-2 bg-gray-300 hover:bg-gray-400 btn-hover text-gray-800 rounded-md transition duration-200">Зарегистрироваться</button>
+          </div>
+          <div class="text-sm text-center text-gray-500 mt-4">
+            Примеры учетных данных:<br/>
+            Пациент: login: patient, pass: 123<br/>
+            Врач: login: doctor, pass: 123<br/>
+            Админ: login: admin, pass: 123
+          </div>
+        </div>
+      </div>
+
+      <!-- Why Teeth Matter Section -->
+      <div class="contact-section">
+        <h2>Почему важно лечить зубы правильно?</h2>
+        <p>Здоровые зубы — залог здоровья всего организма.</p>
+        <p>Правильное лечение предотвращает осложнения, экономит деньги и время.</p>
+        <p class="mt-2">📞 Контакты: +7 (999) 123-45-67 | 📍 Адрес: г. Новосибирск, ул. Стоматологическая, д. 1</p>
+      </div>
+    </div>
+
+    <!-- Register Page -->
+    <div id="registerPage" class="page p-6 space-y-6">
+      <h2 class="text-2xl font-semibold text-center text-gray-700">Регистрация</h2>
+      <input id="regName" type="text" placeholder="Имя" class="w-full px-4 py-2 border rounded-md"/>
+      <input id="regUsername" type="text" placeholder="Логин" class="w-full px-4 py-2 border rounded-md"/>
+      <input id="regPassword" type="password" placeholder="Пароль" class="w-full px-4 py-2 border rounded-md"/>
+      <select id="regRole" class="w-full px-4 py-2 border rounded-md">
+        <option value="">Выберите роль</option>
+        <option value="patient">Пациент</option>
+        <option value="doctor">Врач</option>
+        <option value="admin">Администратор</option>
+      </select>
+      <button onclick="register()" class="w-full py-2 bg-green-500 hover:bg-green-600 btn-hover text-white rounded-md transition duration-200">Зарегистрироваться</button>
+      <button onclick="backToLogin()" class="w-full py-2 bg-gray-300 hover:bg-gray-400 btn-hover text-gray-800 rounded-md transition duration-200">Назад</button>
+    </div>
+
+    <!-- Dashboard - Patient -->
+    <div id="patientDashboard" class="page p-6 space-y-6">
+      <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="profile-icon">П</div>
+          <h2 class="text-xl font-bold">Кабинет пациента</h2>
+        </div>
+        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-1 rounded">Выход</button>
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="switchTab('appointments')" class="py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded flex items-center justify-center gap-2">
+          <span>📅</span><span>Мои записи</span>
+        </button>
+        <button onclick="switchTab('messages')" class="py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded flex items-center justify-center gap-2">
+          <span>💬</span><span>Сообщения</span>
+        </button>
+        <button onclick="switchTab('notifications')" class="py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded flex items-center justify-center gap-2">
+          <span>🔔</span><span>Уведомления</span>
+        </button>
+      </div>
+      <div id="appointments" class="tab-content space-y-6">
+        <h3 class="text-lg font-semibold">Ваши записи:</h3>
+        <ul id="appointmentItems" class="list-disc pl-5 text-gray-700 space-y-2">
+          <li>Доктор Иванов - 2023-11-20 10:00</li>
+          <li>Доктор Петров - 2023-11-21 11:00</li>
+        </ul>
+        <button onclick="showDoctors()" class="mt-4 w-full py-2 bg-purple-500 hover:bg-purple-600 btn-hover text-white rounded-md transition duration-200">Посмотреть врачей</button>
+      </div>
+      <div id="messages" class="hidden tab-content space-y-4">
+        <h3 class="text-lg font-semibold">Сообщения с врачом</h3>
+        <div id="messagesList" class="border rounded p-4 h-40 overflow-y-auto bg-gray-50 mb-4">
+          <div class="mb-2 chat-message msg-doctor"><strong>Доктор Иванов:</strong> Здравствуйте! Какие у вас жалобы?</div>
+          <div class="mb-2 chat-message msg-you text-right"><strong>Вы:</strong> Меня беспокоит боль в десне.</div>
+        </div>
+        <textarea id="newMessage" rows="3" placeholder="Введите ваше сообщение..." class="w-full px-4 py-2 border rounded-md"></textarea>
+        <button onclick="sendMessage()" class="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md">Отправить</button>
+      </div>
+      <div id="notifications" class="hidden tab-content space-y-4">
+        <h3 class="text-lg font-semibold">Уведомления от врача</h3>
+        <div class="notification">Доктор Иванов подтвердил вашу запись на 2023-11-20 10:00</div>
+        <div class="notification">Напоминаем о приёме через 24 часа</div>
+      </div>
+    </div>
+
+    <!-- Doctors List Page -->
+    <div id="doctorsListPage" class="page p-6 space-y-6">
+      <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
+        <h2 class="text-xl font-bold">Список врачей</h2>
+        <button onclick="backToPatient()" class="bg-gray-400 hover:bg-gray-500 btn-hover px-4 py-1 rounded text-white">Назад</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <select id="filterSpecialty" class="px-4 py-2 border rounded-md">
+          <option value="">Фильтр по специализации</option>
+          <option value="Терапевт">Терапевт</option>
+          <option value="Ортодонт">Ортодонт</option>
+          <option value="Хирург">Хирург</option>
+        </select>
+      </div>
+      <div id="doctorsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+    </div>
+
+    <!-- Doctor Schedule Page -->
+    <div id="schedulePage" class="page p-6 space-y-6">
+      <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
+        <h2 id="selectedDoctorName" class="text-xl font-bold">Расписание врача</h2>
+        <button onclick="backToDoctors()" class="bg-gray-400 hover:bg-gray-500 btn-hover px-4 py-1 rounded text-white">Назад</button>
+      </div>
+      <h3 class="text-lg font-semibold">Доступное время:</h3>
+      <div id="scheduleSlots" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div>
+      <button onclick="bookSelectedTime()" class="w-full py-2 bg-green-500 hover:bg-green-600 btn-hover text-white rounded-md transition duration-200">Записаться</button>
+    </div>
+
+    <!-- Dashboard - Doctor -->
+    <div id="doctorDashboard" class="page p-6 space-y-6">
+      <div class="bg-green-600 text-white p-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="profile-icon">В</div>
+          <h2 class="text-xl font-bold">Кабинет врача</h2>
+        </div>
+        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-1 rounded">Выход</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="switchDoctorTab('schedule')" class="py-2 bg-green-100 hover:bg-green-200 text-green-800 rounded flex items-center justify-center gap-2">
+          <span>🗓️</span><span>График</span>
+        </button>
+        <button onclick="switchDoctorTab('requests')" class="py-2 bg-green-100 hover:bg-green-200 text-green-800 rounded flex items-center justify-center gap-2">
+          <span>📥</span><span>Заявки</span>
+        </button>
+        <button onclick="switchDoctorTab('patients')" class="py-2 bg-green-100 hover:bg-green-200 text-green-800 rounded flex items-center justify-center gap-2">
+          <span>👥</span><span>Пациенты</span>
+        </button>
+      </div>
+
+      <!-- Tab Content -->
+      <div id="schedule" class="tab-content space-y-6">
+        <h3 class="text-lg font-semibold">Моё расписание</h3>
+        <div id="doctorSchedule" class="space-y-2">
+          <div class="flex justify-between items-center p-3 border rounded">
+            <span>2023-11-20 10:00</span>
+            <button onclick="removeAppointment(this)" class="text-sm bg-red-500 text-white px-3 py-1 rounded">Отменить</button>
+          </div>
+          <div class="flex justify-between items-center p-3 border rounded">
+            <span>2023-11-20 11:00</span>
+            <button onclick="removeAppointment(this)" class="text-sm bg-red-500 text-white px-3 py-1 rounded">Отменить</button>
+          </div>
+        </div>
+        <button onclick="addNewSlot()" class="mt-4 w-full py-2 bg-blue-500 hover:bg-blue-600 btn-hover text-white rounded-md transition duration-200">Добавить слот</button>
+      </div>
+
+      <div id="requests" class="hidden tab-content space-y-4">
+        <h3 class="text-lg font-semibold">Входящие заявки от пациентов</h3>
+        <div id="requestList" class="space-y-2">
+          <div class="request-item">
+            <strong>Иванов Иван</strong><br/>
+            Запрос на запись к терапевту<br/>
+            Дата: 2023-11-20 10:00
+          </div>
+          <div class="request-item">
+            <strong>Петрова Ольга</strong><br/>
+            Профилактика зубов<br/>
+            Дата: 2023-11-21 14:00
+          </div>
+        </div>
+      </div>
+
+      <div id="patients" class="hidden tab-content space-y-4">
+        <h3 class="text-lg font-semibold">Мои пациенты</h3>
+        <ul class="space-y-2">
+          <li class="doctor-card">
+            <h4>Иванов Иван</h4>
+            <p class="text-sm text-gray-600">Проблема: Боль в зубе</p>
+          </li>
+          <li class="doctor-card">
+            <h4>Петрова Ольга</h4>
+            <p class="text-sm text-gray-600">Проблема: Профилактика</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Dashboard - Admin -->
+    <div id="adminDashboard" class="page p-6 space-y-6 admin-dashboard">
+      <div class="bg-purple-600 text-white p-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div class="profile-icon">A</div>
+          <h2 class="text-xl font-bold">Панель администратора</h2>
+        </div>
+        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-1 rounded">Выход</button>
+      </div>
+
+      <!-- Все врачи -->
+      <div>
+        <h3 class="text-lg font-semibold">Все врачи</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+          <div class="doctor-card">
+            <h4>Доктор Иванов</h4>
+            <p class="text-sm text-gray-600">Специальность: Терапевт</p>
+            <div class="doctor-schedule mt-2">
+              <span class="schedule-slot">Пн 10:00</span>
+              <span class="schedule-slot">Вт 11:00</span>
+            </div>
+          </div>
+          <div class="doctor-card">
+            <h4>Доктор Петров</h4>
+            <p class="text-sm text-gray-600">Специальность: Хирург</p>
+            <div class="doctor-schedule mt-2">
+              <span class="schedule-slot">Ср 09:00</span>
+              <span class="schedule-slot">Пт 14:00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Чат с врачами -->
+      <div class="doctor-chat">
+        <h3 class="text-lg font-semibold">Чат с врачами</h3>
+        <div id="adminChatArea" class="border rounded p-4 h-40 overflow-y-auto bg-gray-50 mb-4">
+          <div class="mb-2 chat-message msg-doctor"><strong>Доктор Иванов:</strong> Добрый день, есть ли свободные слоты?</div>
+          <div class="mb-2 chat-message msg-you text-right"><strong>Вы:</strong> Да, например, завтра в 10:00</div>
+        </div>
+        <textarea id="adminNewMessage" rows="3" placeholder="Введите сообщение..." class="w-full px-4 py-2 border rounded-md"></textarea>
+        <button onclick="sendAdminMessage()" class="w-full py-2 mt-2 bg-purple-500 hover:bg-purple-600 text-white rounded-md">Отправить</button>
+      </div>
+
+      <!-- Общий график врачей -->
+      <div>
+        <h3 class="text-lg font-semibold">Общий график врачей</h3>
+        <table class="w-full mt-2 border-collapse">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border px-4 py-2">Имя</th>
+              <th class="border px-4 py-2">Понедельник</th>
+              <th class="border px-4 py-2">Вторник</th>
+              <th class="border px-4 py-2">Среда</th>
+              <th class="border px-4 py-2">Четверг</th>
+              <th class="border px-4 py-2">Пятница</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="border px-4 py-2">Доктор Иванов</td>
+              <td class="border px-4 py-2"><div class="schedule-slot">10:00</div></td>
+              <td class="border px-4 py-2"><div class="schedule-slot">11:00</div></td>
+              <td class="border px-4 py-2"></td>
+              <td class="border px-4 py-2"></td>
+              <td class="border px-4 py-2"></td>
+            </tr>
+            <tr>
+              <td class="border px-4 py-2">Доктор Петров</td>
+              <td class="border px-4 py-2"></td>
+              <td class="border px-4 py-2"></td>
+              <td class="border px-4 py-2"><div class="schedule-slot">09:00</div></td>
+              <td class="border px-4 py-2"><div class="schedule-slot">14:00</div></td>
+              <td class="border px-4 py-2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const pages = document.querySelectorAll('.page');
+
+    function show(pageId) {
+      pages.forEach(p => {
+        p.classList.remove('active');
+        p.style.display = 'none';
+      });
+      setTimeout(() => {
+        const page = document.getElementById(pageId);
+        page.style.display = 'block';
+        page.classList.add('active');
+      }, 50);
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+    }
+
+    function switchDoctorTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+    }
+
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const role = document.getElementById('role').value;
+
+      if (username === 'patient' && password === '123' && role === 'patient') {
+        show('patientDashboard');
+        switchTab('appointments');
+      } else if (username === 'doctor' && password === '123' && role === 'doctor') {
+        show('doctorDashboard');
+        switchDoctorTab('schedule');
+      } else if (username === 'admin' && password === '123' && role === 'admin') {
+        show('adminDashboard');
+      } else {
+        alert('Неправильный логин, пароль или роль');
+      }
+    }
+
+    function register() {
+      const name = document.getElementById('regName').value;
+      const username = document.getElementById('regUsername').value;
+      const password = document.getElementById('regPassword').value;
+      const role = document.getElementById('regRole').value;
+
+      if (!name || !username || !password || !role) {
+        alert('Заполните все поля');
+        return;
+      }
+
+      alert(`Зарегистрирован пользователь: ${name} как ${role}`);
+      backToLogin();
+    }
+
+    function logout() {
+      show('authPage');
+    }
+
+    function showRegister() {
+      show('registerPage');
+    }
+
+    function backToLogin() {
+      show('authPage');
+    }
+
+    function showDoctors() {
+      show('doctorsListPage');
+      renderDoctors();
+    }
+
+    function backToPatient() {
+      show('patientDashboard');
+      switchTab('appointments');
+    }
+
+    function renderDoctors() {
+      const doctorsGrid = document.getElementById('doctorsGrid');
+      doctorsGrid.innerHTML = '';
+      const filterSpecialty = document.getElementById('filterSpecialty').value;
+
+      const doctors = [
+        {id:1,name:"Доктор Иванов",specialty:"Терапевт"},
+        {id:2,name:"Доктор Петров",specialty:"Ортодонт"},
+        {id:3,name:"Доктор Смирнова",specialty:"Хирург"}
+      ];
+
+      doctors.forEach(doctor => {
+        if (filterSpecialty && doctor.specialty !== filterSpecialty) return;
+        const card = document.createElement('div');
+        card.className = "border rounded-lg overflow-hidden shadow card-hover transition";
+        card.innerHTML = `
+          <div class="p-4">
+            <h3 class="font-bold">${doctor.name}</h3>
+            <p class="text-sm text-gray-600">${doctor.specialty}</p>
+            <button onclick="viewSchedule(${doctor.id}, '${doctor.name}')" class="mt-2 w-full py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm transition">Посмотреть расписание</button>
+          </div>`;
+        doctorsGrid.appendChild(card);
+      });
+    }
+
+    function viewSchedule(id, name) {
+      document.getElementById("selectedDoctorName").textContent = `Расписание: ${name}`;
+      const scheduleSlots = document.getElementById("scheduleSlots");
+      scheduleSlots.innerHTML = "";
+      ["2023-11-20T10:00", "2023-11-20T11:00", "2023-11-21T09:00"].forEach(time => {
+        const btn = document.createElement("button");
+        btn.className = "time-slot bg-white border border-blue-500 text-blue-500 py-2 rounded w-full transition";
+        btn.textContent = new Date(time).toLocaleString();
+        btn.setAttribute("data-time", time);
+        btn.onclick = () => selectTime(btn);
+        scheduleSlots.appendChild(btn);
+      });
+      show("schedulePage");
+    }
+
+    function selectTime(button) {
+      document.querySelectorAll(".time-slot").forEach(b => b.classList.remove("selected-time"));
+      button.classList.add("selected-time");
+    }
+
+    function bookSelectedTime() {
+      const selected = document.querySelector("#schedulePage button.selected-time");
+      if (!selected) {
+        alert("Выберите время!");
+        return;
+      }
+
+      const doctorName = document.getElementById("selectedDoctorName").textContent.replace("Расписание: ", "");
+      const time = selected.getAttribute("data-time");
+
+      const li = document.createElement("li");
+      li.textContent = `${doctorName} - ${new Date(time).toLocaleString()}`;
+      document.getElementById("appointmentItems").appendChild(li);
+
+      backToPatient();
+    }
+
+    function addNewSlot() {
+      const container = document.getElementById('doctorSchedule');
+      const slot = document.createElement('div');
+      slot.className = "flex justify-between items-center p-3 border rounded";
+      slot.innerHTML = `
+        <input type="datetime-local" class="px-2 py-1 border rounded" />
+        <button onclick="removeAppointment(this)" class="text-sm bg-red-500 text-white px-3 py-1 rounded">Отменить</button>
+      `;
+      container.appendChild(slot);
+    }
+
+    function removeAppointment(button) {
+      const item = button.closest('.flex');
+      item.parentElement.removeChild(item);
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('newMessage');
+      const messagesList = document.getElementById('messagesList');
+      const msg = input.value.trim();
+      if (!msg) return;
+      const div = document.createElement('div');
+      div.className = "chat-message msg-you text-right";
+      div.innerHTML = `<strong>Вы:</strong> ${msg}`;
+      messagesList.appendChild(div);
+      messagesList.scrollTop = messagesList.scrollHeight;
+      input.value = '';
+    }
+
+    function sendAdminMessage() {
+      const input = document.getElementById('adminNewMessage');
+      const chatBox = document.getElementById('adminChatArea');
+      const msg = input.value.trim();
+      if (!msg) return;
+      const div = document.createElement('div');
+      div.className = "chat-message msg-you text-right";
+      div.innerHTML = `<strong>Вы:</strong> ${msg}`;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      input.value = '';
+    }
+
+    // Mouse trail animation
+    const trailContainer = document.getElementById('trailContainer');
+    let trails = [];
+
+    for (let i = 0; i < 10; i++) {
+      const dot = document.createElement('div');
+      dot.classList.add('mouse-trail');
+      trailContainer.appendChild(dot);
+      trails.push(dot);
+    }
+
+    document.addEventListener('mousemove', e => {
+      trails.forEach((dot, index) => {
+        setTimeout(() => {
+          dot.style.left = e.pageX + 'px';
+          dot.style.top = e.pageY + 'px';
+          dot.style.transform = 'scale(1)';
+        }, index * 20);
+      });
+
+      setTimeout(() => {
+        trails.forEach(dot => {
+          dot.style.transform = 'scale(0)';
+        });
+      }, 100);
+    });
+  </script>
+</body>
+</html>
